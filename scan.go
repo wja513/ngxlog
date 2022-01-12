@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type Scanner struct {
+type scanner struct {
 	// 格式必须 空格分隔， 如有空格，则必须用""、[]包裹
 	format  string
 	scanner *bufio.Scanner
@@ -21,12 +21,12 @@ type Scanner struct {
 	rec *Record
 }
 type Record struct {
-	scanner *Scanner
+	scanner *scanner
 	indexes [][2]int // 指明怎么从bLine中截取字段值
 	bLine   []byte   // []byte line 变化（GC）
 }
 
-func (s *Scanner) Scan() bool {
+func (s *scanner) Scan() bool {
 	rec := s.rec
 	if !s.scanner.Scan() {
 		rec.bLine = rec.bLine[:0]
@@ -53,11 +53,11 @@ func (s *Scanner) Scan() bool {
 	return true
 }
 
-func (s *Scanner) Buffer(buf []byte, max int) {
+func (s *scanner) Buffer(buf []byte, max int) {
 	s.scanner.Buffer(buf, max)
 }
 
-func (s *Scanner) parseFieldCol() {
+func (s *scanner) parseFieldCol() {
 	s.fieldCol = make(map[string]int)
 	format := s2b(s.format)
 	indexes := parseLine(format, 0)
@@ -71,7 +71,7 @@ func (s *Scanner) parseFieldCol() {
 	s.nFields = len(indexes)
 }
 
-func (s *Scanner) Record() *Record {
+func (s *scanner) Record() *Record {
 	return s.rec
 }
 
@@ -151,8 +151,8 @@ func parseLine(bLine []byte, nFields int) [][2]int {
 	return indexes
 }
 
-func NewScanner(format string, reader io.Reader) *Scanner {
-	s := new(Scanner)
+func NewScanner(format string, reader io.Reader) *scanner {
+	s := new(scanner)
 	s.format = format
 	s.scanner = bufio.NewScanner(reader)
 	s.parseFieldCol()
