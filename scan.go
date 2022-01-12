@@ -29,8 +29,6 @@ type Record struct {
 func (s *scanner) Scan() bool {
 	rec := s.rec
 	if !s.scanner.Scan() {
-		rec.bLine = rec.bLine[:0]
-		rec.indexes = rec.indexes[:0]
 		if err := s.scanner.Err(); err != nil {
 			log.Println("read line error:" + err.Error()) // bufio.ErrTooLong: token too long. use Buffer(buf, max) to increase max line size
 		}
@@ -40,7 +38,6 @@ func (s *scanner) Scan() bool {
 	rec.bLine = s.scanner.Bytes()
 	if len(rec.bLine) == 0 { // skip blank line
 		log.Println("skip blank line")
-		rec.indexes = rec.indexes[:0]
 		return s.Scan()
 	}
 	rec.indexes = parseLine(rec.bLine, s.nFields)
