@@ -14,6 +14,7 @@ func main() {
 	}
 	defer f.Close()
 	s := ngxlog.NewScanner(format, f)
+	//s.Buffer(make([]byte, 8*1024*1024), 8*1024*1024) // max line size 8MB,default 64KB
 	for s.Scan() {
 		rec := s.Record()
 		// do your business logic
