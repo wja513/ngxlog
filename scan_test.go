@@ -25,19 +25,19 @@ demo.example.com - [22/Nov/2021:09:14:08 +0800] "GET /open/serviceCode?siteId=12
 		t.Error("normal line test failed")
 	}
 
-	// empty line
+	// blank line
 	s.Scan()
 	if rec := s.Record(); !rec.Mismatch() {
 		t.Error("empty line test failed")
 	}
 
-	// field mismatch line
+	// field number mismatch line
 	s.Scan()
 	if rec := s.Record(); !rec.Mismatch() {
-		t.Error("empty line test failed")
+		t.Error("field number mismatch line test failed")
 	}
 
-	// super large line exceed 64kb will be ignored
+	// super large line exceed 64kb will be ignored, iteration will be stopped!!! TODO
 	s.Scan()
 	if rec := s.Record(); !rec.Mismatch() {
 		t.Error("super large line test failed")
