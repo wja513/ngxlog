@@ -18,10 +18,6 @@ func main() {
 	s := ngxlog.NewScanner(format, f)
 	for s.Scan() {
 		rec := s.Record()
-		if rec.Mismatch() {
-			ngxlog.LogMismatch(rec) //deal mismatch line
-			continue
-		}
 		// do your business logic
 		fmt.Println(rec.FieldTime("time_local"))
 		//fmt.Println(s.Col(3))

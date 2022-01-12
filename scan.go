@@ -29,22 +29,32 @@ type Record struct {
 func (s *Scanner) Scan() bool {
 	rec := s.rec
 	if !s.scanner.Scan() {
-		if s.scanner.Err() == bufio.ErrTooLong { // token too long
-			rec.bLine = rec.bLine[:0]
-			rec.indexes = rec.indexes[:0]
-			return true
+		rec.bLine = rec.bLine[:0]
+		rec.indexes = rec.indexes[:0]
+		if err := s.scanner.Err(); err != nil {
+			log.Println("read line error:" + err.Error()) // bufio.ErrTooLong: token too long. use Buffer(buf, max) to increase max line size
 		}
 		return false
 	}
 
 	rec.bLine = s.scanner.Bytes()
-	if len(rec.bLine) == 0 { // skip empty line
+	if len(rec.bLine) == 0 { // skip blank line
+		log.Println("skip blank line")
 		rec.indexes = rec.indexes[:0]
-		return true
+		return s.Scan()
 	}
 	rec.indexes = parseLine(rec.bLine, s.nFields)
 
+	if rec.scanner.nFields != len(rec.indexes) { //  skip mismatch line. (when log format changed)
+		log.Printf("Values len %d mismatch fields len %d, raw text: %s \n", len(rec.indexes), rec.scanner.nFields, rec.Text())
+		return s.Scan()
+	}
+
 	return true
+}
+
+func (s *Scanner) Buffer(buf []byte, max int) {
+	s.scanner.Buffer(buf, max)
 }
 
 func (s *Scanner) parseFieldCol() {
@@ -102,10 +112,6 @@ func (rec *Record) Col(i int) string {
 	return b2s(rec.bLine[rec.indexes[i][0]:rec.indexes[i][1]])
 }
 
-func (rec *Record) Mismatch() bool {
-	return rec.scanner.nFields != len(rec.indexes)
-}
-
 // 只存 offset
 func parseLine(bLine []byte, nFields int) [][2]int {
 	indexes := make([][2]int, 0, nFields)
@@ -154,8 +160,4 @@ func NewScanner(format string, reader io.Reader) *Scanner {
 	s.rec.scanner = s
 
 	return s
-}
-
-func LogMismatch(rec *Record) {
-	log.Printf("Values len %d mismatch fields len %d, raw text: %s \n", len(rec.indexes), rec.scanner.nFields, rec.Text())
 }

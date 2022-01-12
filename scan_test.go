@@ -9,6 +9,10 @@ import (
 
 func TestNewScanner(t *testing.T) {
 	// 4 lines
+	// normal line
+	// blank line will be skipped
+	// mismatch line will be skipped
+	// super large line exceed 64kb will be ignored, iteration will be stopped!!!
 	logLines := bytes.NewBufferString(`127.0.0.1 demo.example.com - [22/Nov/2021:09:14:08 +0800] "GET /open/serviceCode?siteId=121915&tid= HTTP/1.1" 200 73 "-" "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36" 1433 0.032 0.032 "101.80.148.128, 101.80.148.128" 101.80.148.128
 
 demo.example.com - [22/Nov/2021:09:14:08 +0800] "GET /open/serviceCode?siteId=121915&tid= HTTP/1.1" 200 73 "-" "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36" 1433 0.032 0.032 "101.80.148.128, 101.80.148.128" 101.80.148.128
@@ -19,28 +23,15 @@ demo.example.com - [22/Nov/2021:09:14:08 +0800] "GET /open/serviceCode?siteId=12
 	format := `$remote_addr $http_host $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time $upstream_response_time "$http_x_forwarded_for" $http_x_real_ip`
 	s := NewScanner(format, logLines)
 
-	// normal line
-	s.Scan()
-	if rec := s.Record(); rec.Field("time_local") != "22/Nov/2021:09:14:08 +0800" {
-		t.Error("normal line test failed")
+	records := make([]Record, 0)
+	for s.Scan() {
+		records = append(records, *s.Record())
 	}
-
-	// blank line
-	s.Scan()
-	if rec := s.Record(); !rec.Mismatch() {
-		t.Error("empty line test failed")
+	if len(records) != 1 {
+		t.Errorf("parse error1")
 	}
-
-	// field number mismatch line
-	s.Scan()
-	if rec := s.Record(); !rec.Mismatch() {
-		t.Error("field number mismatch line test failed")
-	}
-
-	// super large line exceed 64kb will be ignored, iteration will be stopped!!! TODO
-	s.Scan()
-	if rec := s.Record(); !rec.Mismatch() {
-		t.Error("super large line test failed")
+	if records[0].Field("time_local") != "22/Nov/2021:09:14:08 +0800" {
+		t.Errorf("parse error2")
 	}
 }
 
