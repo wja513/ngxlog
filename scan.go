@@ -106,6 +106,10 @@ func (rec *Record) FieldFloat(name string) (float64, error) {
 
 // Col zero-based
 func (rec *Record) Col(i int) string {
+	return string(rec.bLine[rec.indexes[i][0]:rec.indexes[i][1]])
+}
+
+func (rec *Record) ColUnsafe(i int) string {
 	return b2s(rec.bLine[rec.indexes[i][0]:rec.indexes[i][1]])
 }
 
